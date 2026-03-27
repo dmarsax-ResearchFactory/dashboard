@@ -1,0 +1,2320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>신한은행 실시간 통합 대시보드</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --primary: #0046FF;
+    --shinhan-blue: #0046FF;
+    --dark: #1a1f36;
+    --sidebar-bg: #ffffff;
+    --body-bg: #f0f2f5;
+    --card-bg: #ffffff;
+    --text-primary: #1a1f36;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --border: #e5e7eb;
+    --green: #10b981;
+    --red: #ef4444;
+    --orange: #f59e0b;
+    --blue-light: #e0e7ff;
+    --navy: #0f1729;
+  }
+
+  body {
+    font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--body-bg);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 200px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    padding: 0 20px 32px;
+    cursor: pointer;
+  }
+
+  .logo img {
+    height: 32px;
+    object-fit: contain;
+  }
+
+  .logo-text {
+    padding: 0 20px 32px;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo-text .shinhan-logo {
+    height: 36px;
+  }
+
+  .nav-menu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 12px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+
+  .nav-item:hover {
+    background: #f3f4f6;
+    color: var(--text-primary);
+  }
+
+  .nav-item.active {
+    background: var(--blue-light);
+    color: var(--shinhan-blue);
+  }
+
+  .nav-item svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .nav-bottom {
+    padding: 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    margin-top: 12px;
+  }
+
+  /* Main content */
+  .main {
+    flex: 1;
+    margin-left: 200px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .header-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+  }
+
+  .header-tabs {
+    display: flex;
+    gap: 0;
+  }
+
+  .header-tab {
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border: none;
+    background: none;
+    position: relative;
+    transition: color 0.15s;
+  }
+
+  .header-tab:hover {
+    color: var(--text-primary);
+  }
+
+  .header-tab.active {
+    color: var(--shinhan-blue);
+    font-weight: 600;
+  }
+
+  .header-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--shinhan-blue);
+    border-radius: 1px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #f3f4f6;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .search-box:focus-within {
+    background: #fff;
+    border-color: var(--border);
+    box-shadow: 0 0 0 3px rgba(0,70,255,0.1);
+  }
+
+  .search-box svg {
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+  }
+
+  .search-box input {
+    border: none;
+    background: none;
+    outline: none;
+    font-size: 13px;
+    color: var(--text-primary);
+    width: 160px;
+    font-family: inherit;
+  }
+
+  .search-box input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+
+  .icon-btn:hover {
+    background: #f3f4f6;
+    color: var(--text-primary);
+  }
+
+  .icon-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--shinhan-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .avatar svg {
+    width: 20px;
+    height: 20px;
+    color: white;
+  }
+
+  /* Content */
+  .content {
+    padding: 24px 32px;
+    flex: 1;
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* Metric Cards Row */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .metric-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--border);
+  }
+
+  .metric-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .metric-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -1px;
+    line-height: 1.2;
+  }
+
+  .metric-sub {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .metric-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .metric-badge.up {
+    background: #ecfdf5;
+    color: var(--green);
+  }
+
+  .metric-badge.down {
+    background: #fef2f2;
+    color: var(--red);
+  }
+
+  .metric-sub-text {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  /* Two Column Layout */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--border);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .card-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 0;
+    background: #f3f4f6;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .card-action-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+
+  .card-action-btn.active {
+    background: var(--dark);
+    color: white;
+    border-radius: 6px;
+  }
+
+  /* Funnel */
+  .funnel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .funnel-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .funnel-label {
+    width: 100px;
+    text-align: right;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+  }
+
+  .funnel-bar-wrap {
+    flex: 1;
+    position: relative;
+  }
+
+  .funnel-bar-bg {
+    height: 44px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .funnel-bar {
+    height: 100%;
+    background: var(--navy);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 16px;
+    transition: width 0.8s ease;
+  }
+
+  .funnel-bar-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+  }
+
+  .funnel-bar-pct {
+    position: absolute;
+    right: 0;
+    top: -2px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .funnel-conv {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 2px 0;
+  }
+
+  /* Donut Chart */
+  .donut-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+  }
+
+  .donut-wrap {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 12px 0 24px;
+  }
+
+  .donut-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .donut-center-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .donut-center-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .donut-legend {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .legend-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .legend-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .legend-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  /* Map Section */
+  .map-section {
+    margin-bottom: 20px;
+  }
+
+  .map-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .map-legend {
+    display: flex;
+    gap: 20px;
+  }
+
+  .map-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .map-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .map-content {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  .map-visual {
+    background: var(--navy);
+    border-radius: 12px;
+    position: relative;
+    height: 380px;
+    overflow: hidden;
+  }
+
+  .map-svg-wrap {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .map-spotlight {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    border-radius: 10px;
+    padding: 14px 18px;
+    color: white;
+  }
+
+  .map-spotlight-tag {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.7;
+    margin-bottom: 4px;
+  }
+
+  .map-spotlight-title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .map-spotlight-growth {
+    font-size: 12px;
+    color: var(--green);
+    margin-top: 2px;
+  }
+
+  .map-dots .dot {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.5);
+  }
+
+  .map-region-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .region-card {
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 18px 20px;
+    border: 1px solid var(--border);
+  }
+
+  .region-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .region-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .region-status {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+
+  .region-status.stable {
+    background: #ecfdf5;
+    color: var(--green);
+  }
+
+  .region-status.neutral {
+    background: #fffbeb;
+    color: var(--orange);
+  }
+
+  .region-status.anomaly {
+    background: #fef2f2;
+    color: var(--red);
+  }
+
+  .region-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .region-metric-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+
+  .region-metric-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .region-metric-value.green { color: var(--green); }
+  .region-metric-value.orange { color: var(--orange); }
+  .region-metric-value.red { color: var(--red); }
+
+  .region-alert {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--red);
+    font-weight: 500;
+  }
+
+  .region-alert svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* ===== 지점 Tab ===== */
+  .metrics-row-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .metrics-row-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 14px;
+    background: #f8f9fb;
+    border-radius: 8px;
+  }
+
+  .stat-item-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .stat-item-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .stat-item-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Staff table */
+  .staff-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+  }
+
+  .staff-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .staff-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .staff-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .staff-status .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  .staff-status .dot.on { background: var(--green); }
+  .staff-status .dot.break { background: var(--orange); }
+  .staff-status .dot.off { background: #d1d5db; }
+
+  /* NPS gauge */
+  .nps-display {
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .nps-score {
+    font-size: 56px;
+    font-weight: 700;
+    color: var(--shinhan-blue);
+  }
+
+  .nps-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .nps-bar {
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 16px;
+    gap: 2px;
+  }
+
+  .nps-bar .promoter { background: var(--green); flex: 62; }
+  .nps-bar .passive { background: var(--orange); flex: 25; }
+  .nps-bar .detractor { background: var(--red); flex: 13; }
+
+  .nps-legend {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* Time chart */
+  .time-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 140px;
+    margin-top: 16px;
+    padding-bottom: 24px;
+    position: relative;
+  }
+
+  .time-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .time-bar {
+    width: 100%;
+    max-width: 28px;
+    background: var(--shinhan-blue);
+    border-radius: 4px 4px 0 0;
+    transition: height 0.5s ease;
+    opacity: 0.7;
+  }
+
+  .time-bar.peak { opacity: 1; }
+
+  .time-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    position: absolute;
+    bottom: 0;
+  }
+
+  /* ===== SOL Tab ===== */
+  .health-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .health-item {
+    text-align: center;
+    padding: 14px 8px;
+    background: #f8f9fb;
+    border-radius: 8px;
+  }
+
+  .health-item.good { border-left: 3px solid var(--green); }
+  .health-item.warn { border-left: 3px solid var(--orange); }
+  .health-item.bad { border-left: 3px solid var(--red); }
+
+  .health-name {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .health-value {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .health-value.good { color: var(--green); }
+  .health-value.warn { color: var(--orange); }
+  .health-value.bad { color: var(--red); }
+
+  /* Popular services */
+  .service-list {
+    margin-top: 16px;
+  }
+
+  .service-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .service-rank {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+  }
+
+  .service-rank.r1 { background: var(--shinhan-blue); }
+  .service-rank.r2 { background: #3b6cf5; }
+  .service-rank.r3 { background: #6b8df7; }
+  .service-rank.r4 { background: #9bb0f9; }
+  .service-rank.r5 { background: #bdc9f7; }
+
+  .service-info {
+    flex: 1;
+  }
+
+  .service-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .service-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .service-users {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .service-bar-bg {
+    width: 80px;
+    height: 6px;
+    background: #f3f4f6;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .service-bar-fill {
+    height: 100%;
+    background: var(--shinhan-blue);
+    border-radius: 3px;
+  }
+
+  /* Anomaly section */
+  .anomaly-display {
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .anomaly-number {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--red);
+  }
+
+  .anomaly-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .anomaly-list {
+    margin-top: 16px;
+  }
+
+  .anomaly-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+
+  .anomaly-item.critical {
+    background: #fef2f2;
+    color: var(--red);
+  }
+
+  .anomaly-item.warning {
+    background: #fffbeb;
+    color: var(--orange);
+  }
+
+  .anomaly-item .anomaly-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .anomaly-item .anomaly-text {
+    flex: 1;
+    font-weight: 500;
+  }
+
+  .anomaly-item .anomaly-time {
+    font-size: 11px;
+    opacity: 0.7;
+  }
+
+  /* Realtime line chart placeholder */
+  .mini-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 60px;
+    margin-top: 12px;
+  }
+
+  .mini-bar {
+    flex: 1;
+    background: var(--shinhan-blue);
+    border-radius: 2px;
+    opacity: 0.6;
+    transition: height 0.3s;
+  }
+
+  /* SVG map of Korea */
+  .korea-map {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Canvas chart */
+  canvas {
+    display: block;
+  }
+
+  /* Responsive */
+  @media (max-width: 1200px) {
+    .two-col { grid-template-columns: 1fr; }
+    .map-content { grid-template-columns: 1fr; }
+    .metrics-row-4 { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Retention chart (for SOL) */
+  .retention-chart-wrap {
+    margin-top: 16px;
+    height: 180px;
+    position: relative;
+  }
+
+  .dwell-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .dwell-stat {
+    text-align: center;
+    padding: 14px;
+    background: #f8f9fb;
+    border-radius: 8px;
+  }
+
+  .dwell-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--shinhan-blue);
+  }
+
+  .dwell-stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* Concurrent users */
+  .concurrent-display {
+    text-align: center;
+    padding: 10px 0;
+  }
+
+  .concurrent-number {
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .concurrent-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .concurrent-trend {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2px;
+    height: 40px;
+    margin-top: 10px;
+  }
+
+  .concurrent-bar {
+    width: 4px;
+    background: var(--shinhan-blue);
+    border-radius: 2px;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <a class="logo-text" href="#" onclick="switchTab('integrated'); return false;">
+    <img src="assets/shinhan-logo.svg" alt="신한은행" style="height:28px; width:auto; object-fit:contain;">
+  </a>
+  <nav class="nav-menu">
+    <a class="nav-item active" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Overview
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 9h20"/><path d="M10 3v18"/></svg>
+      Portfolio
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Analytics
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Treasury
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Reports
+    </a>
+  </nav>
+  <div class="nav-bottom">
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Support
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign Out
+    </a>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <span class="header-title">실시간 통합 대시보드</span>
+      <div class="header-tabs">
+        <button class="header-tab active" data-tab="integrated" onclick="switchTab('integrated')">통합</button>
+        <button class="header-tab" data-tab="branch" onclick="switchTab('branch')">지점</button>
+        <button class="header-tab" data-tab="sol" onclick="switchTab('sol')">SOL</button>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search systems...">
+      </div>
+      <button class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      </button>
+      <button class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
+      <div class="avatar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content Area -->
+  <div class="content">
+
+    <!-- ==================== 통합 Tab ==================== -->
+    <div class="tab-content active" id="tab-integrated">
+      <!-- Top Metrics -->
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-label">Total Users</div>
+          <div class="metric-value">1,284,502</div>
+          <div class="metric-sub">
+            <span class="metric-badge up">↗ 12.4%</span>
+            <span class="metric-sub-text">VS LAST QUARTER</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Active Users</div>
+          <div class="metric-value">942,118</div>
+          <div class="metric-sub">
+            <span class="metric-badge up">↗ 8.1%</span>
+            <span class="metric-sub-text">ENGAGEMENT RATE 73.3%</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Transaction Volume</div>
+          <div class="metric-value">₩4.2조</div>
+          <div class="metric-sub">
+            <span class="metric-badge down">↘ 2.3%</span>
+            <span class="metric-sub-text">SETTLEMENT LATENCY +4MS</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Funnel + Donut -->
+      <div class="two-col">
+        <!-- Customer Journey Funnel -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">고객 여정 퍼널</div>
+              <div class="card-subtitle">Real-time conversion across ecosystem touchpoints</div>
+            </div>
+            <div class="card-actions">
+              <button class="card-action-btn">DAILY</button>
+              <button class="card-action-btn active">WEEKLY</button>
+            </div>
+          </div>
+          <div class="funnel">
+            <div class="funnel-row">
+              <div class="funnel-label">ACQUISITION</div>
+              <div class="funnel-bar-wrap">
+                <div class="funnel-bar-bg">
+                  <div class="funnel-bar" style="width:100%">
+                    <span class="funnel-bar-value">450k (100%)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="funnel-conv">82% Conv.</div>
+            <div class="funnel-row">
+              <div class="funnel-label">ACTIVATION</div>
+              <div class="funnel-bar-wrap">
+                <div class="funnel-bar-bg">
+                  <div class="funnel-bar" style="width:82%">
+                    <span class="funnel-bar-value">369k</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="funnel-conv">64% Conv.</div>
+            <div class="funnel-row">
+              <div class="funnel-label">RETENTION</div>
+              <div class="funnel-bar-wrap">
+                <div class="funnel-bar-bg">
+                  <div class="funnel-bar" style="width:52%">
+                    <span class="funnel-bar-value">236k</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="funnel-conv">12% Conv.</div>
+            <div class="funnel-row">
+              <div class="funnel-label">REVENUE</div>
+              <div class="funnel-bar-wrap">
+                <div class="funnel-bar-bg">
+                  <div class="funnel-bar" style="width:6.3%">
+                    <span class="funnel-bar-value" style="font-size:12px; padding-left:4px;"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Channel Distribution Donut -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">채널별 거래 비중</div>
+          </div>
+          <div class="donut-section">
+            <div class="donut-wrap">
+              <canvas id="donut-canvas" width="200" height="200" style="width:200px;height:200px;"></canvas>
+              <div class="donut-center">
+                <div class="donut-center-value">₩4.2조</div>
+                <div class="donut-center-label">TOTAL FLOW</div>
+              </div>
+            </div>
+            <div class="donut-legend">
+              <div class="legend-item">
+                <div class="legend-left">
+                  <div class="legend-dot" style="background:#1a1f36"></div>
+                  <span class="legend-label">Digital App</span>
+                </div>
+                <span class="legend-value">64%</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-left">
+                  <div class="legend-dot" style="background:#6b8df7"></div>
+                  <span class="legend-label">Physical Branch</span>
+                </div>
+                <span class="legend-value">22%</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-left">
+                  <div class="legend-dot" style="background:#d1d5db"></div>
+                  <span class="legend-label">Automated ATM</span>
+                </div>
+                <span class="legend-value">14%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Regional Heatmap -->
+      <div class="card map-section">
+        <div class="map-header">
+          <div>
+            <div class="card-title">권역별 영업 히트맵</div>
+            <div class="card-subtitle">Regional risk analysis and sales penetration</div>
+          </div>
+          <div class="map-legend">
+            <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--green)"></div> SAFE</div>
+            <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--orange)"></div> NEUTRAL</div>
+            <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--red)"></div> ANOMALY</div>
+          </div>
+        </div>
+        <div class="map-content">
+          <!-- Map Visual -->
+          <div class="map-visual">
+            <canvas id="korea-map-canvas" style="width:100%;height:100%;"></canvas>
+            <div class="map-spotlight">
+              <div class="map-spotlight-tag">SPOTLIGHT</div>
+              <div class="map-spotlight-title">Seoul Metropolitan Area</div>
+              <div class="map-spotlight-growth">+14.2% Growth Week-over-Week</div>
+            </div>
+          </div>
+
+          <!-- Region Cards -->
+          <div class="map-region-cards">
+            <div class="region-card">
+              <div class="region-card-header">
+                <span class="region-name">서울</span>
+                <span class="region-status stable">STABLE</span>
+              </div>
+              <div class="region-metrics">
+                <div>
+                  <div class="region-metric-label">VOLUME</div>
+                  <div class="region-metric-value">₩8,420억</div>
+                </div>
+                <div>
+                  <div class="region-metric-label">PENETRATION</div>
+                  <div class="region-metric-value">42.1%</div>
+                </div>
+                <div>
+                  <div class="region-metric-label">RISK SCORE</div>
+                  <div class="region-metric-value green">0.02</div>
+                </div>
+              </div>
+            </div>
+            <div class="region-card">
+              <div class="region-card-header">
+                <span class="region-name">경기 남부</span>
+                <span class="region-status neutral">NEUTRAL</span>
+              </div>
+              <div class="region-metrics">
+                <div>
+                  <div class="region-metric-label">VOLUME</div>
+                  <div class="region-metric-value">₩2,150억</div>
+                </div>
+                <div>
+                  <div class="region-metric-label">PENETRATION</div>
+                  <div class="region-metric-value">18.4%</div>
+                </div>
+                <div>
+                  <div class="region-metric-label">RISK SCORE</div>
+                  <div class="region-metric-value orange">0.45</div>
+                </div>
+              </div>
+            </div>
+            <div class="region-card">
+              <div class="region-card-header">
+                <span class="region-name">부산</span>
+                <span class="region-status anomaly">ANOMALY</span>
+              </div>
+              <div class="region-metrics">
+                <div>
+                  <div class="region-metric-label">VOLUME</div>
+                  <div class="region-metric-value">₩420억</div>
+                </div>
+                <div>
+                  <div class="region-metric-label">PENETRATION</div>
+                  <div class="region-metric-value">5.2%</div>
+                </div>
+                <div>
+                  <div class="region-metric-label">RISK SCORE</div>
+                  <div class="region-metric-value red">0.89</div>
+                </div>
+              </div>
+              <div class="region-alert">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L1 21h22L12 2zm0 3.5L19.5 19h-15L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>
+                <span>High failed transaction rate detected in regional hubs.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 지점 Tab ==================== -->
+    <div class="tab-content" id="tab-branch">
+      <!-- Top Metrics -->
+      <div class="metrics-row-4">
+        <div class="metric-card">
+          <div class="metric-label">운영 지점수</div>
+          <div class="metric-value">847</div>
+          <div class="metric-sub">
+            <span class="metric-badge down">↘ 12</span>
+            <span class="metric-sub-text">전년 대비 감소</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">오늘 방문객수</div>
+          <div class="metric-value">38,542</div>
+          <div class="metric-sub">
+            <span class="metric-badge up">↗ 5.2%</span>
+            <span class="metric-sub-text">전주 동요일 대비</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">거래건수</div>
+          <div class="metric-value">124,891</div>
+          <div class="metric-sub">
+            <span class="metric-sub-text">거래금액 ₩3,842억</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">고객 평균 대기시간</div>
+          <div class="metric-value">8.3<span style="font-size:18px;font-weight:500;color:var(--text-secondary)">분</span></div>
+          <div class="metric-sub">
+            <span class="metric-badge up">↗ 1.2분</span>
+            <span class="metric-sub-text">목표: 7분 이하</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 여신/수신 + 직원 현황 -->
+      <div class="two-col">
+        <!-- 여신/수신 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">여신 / 수신 거래 현황</div>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="stat-item-label">여신 평균잔액</div>
+              <div class="stat-item-value">₩2.8억</div>
+              <div class="stat-item-sub">좌수 312,458</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-item-label">수신 평균잔액</div>
+              <div class="stat-item-value">₩1.4억</div>
+              <div class="stat-item-sub">좌수 891,204</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-item-label">여신 신규</div>
+              <div class="stat-item-value" style="color:var(--green)">+284</div>
+              <div class="stat-item-sub">오늘 신규 건수</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-item-label">수신 신규</div>
+              <div class="stat-item-value" style="color:var(--green)">+1,052</div>
+              <div class="stat-item-sub">오늘 신규 건수</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NPS -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">고객 만족도 (NPS)</div>
+          </div>
+          <div class="nps-display">
+            <div class="nps-score">+49</div>
+            <div class="nps-label">Net Promoter Score</div>
+          </div>
+          <div class="nps-bar">
+            <div class="promoter"></div>
+            <div class="passive"></div>
+            <div class="detractor"></div>
+          </div>
+          <div class="nps-legend">
+            <span>추천 62%</span>
+            <span>중립 25%</span>
+            <span>비추천 13%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 직원 현황 + 시간대별 거래 -->
+      <div class="two-col">
+        <!-- 직원 현황 -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">직원 현황</div>
+              <div class="card-subtitle">역할별 근무 상태 현황</div>
+            </div>
+          </div>
+          <table class="staff-table">
+            <thead>
+              <tr>
+                <th>역할</th>
+                <th>총원</th>
+                <th>근무중</th>
+                <th>휴식</th>
+                <th>부재</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:600">간편상담</td>
+                <td>1,240</td>
+                <td>1,082</td>
+                <td>98</td>
+                <td>60</td>
+                <td><span class="staff-status"><span class="dot on"></span> 정상</span></td>
+              </tr>
+              <tr>
+                <td style="font-weight:600">종합상담</td>
+                <td>856</td>
+                <td>724</td>
+                <td>72</td>
+                <td>60</td>
+                <td><span class="staff-status"><span class="dot on"></span> 정상</span></td>
+              </tr>
+              <tr>
+                <td style="font-weight:600">기업금융</td>
+                <td>412</td>
+                <td>338</td>
+                <td>42</td>
+                <td>32</td>
+                <td><span class="staff-status"><span class="dot on"></span> 정상</span></td>
+              </tr>
+              <tr>
+                <td style="font-weight:600">프리미어</td>
+                <td>186</td>
+                <td>142</td>
+                <td>24</td>
+                <td>20</td>
+                <td><span class="staff-status"><span class="dot break"></span> 주의</span></td>
+              </tr>
+              <tr>
+                <td style="font-weight:600">RM</td>
+                <td>324</td>
+                <td>286</td>
+                <td>22</td>
+                <td>16</td>
+                <td><span class="staff-status"><span class="dot on"></span> 정상</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 시간대별 거래 추이 -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">시간대별 거래 추이</div>
+              <div class="card-subtitle">오늘 시간대별 거래건수</div>
+            </div>
+          </div>
+          <div class="time-chart" id="branch-time-chart">
+            <!-- Generated by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== SOL Tab ==================== -->
+    <div class="tab-content" id="tab-sol">
+      <!-- Top Metrics -->
+      <div class="metrics-row-4">
+        <div class="metric-card">
+          <div class="metric-label">MAU</div>
+          <div class="metric-value">12.8<span style="font-size:18px;font-weight:500;color:var(--text-secondary)">M</span></div>
+          <div class="metric-sub">
+            <span class="metric-badge up">↗ 8.4%</span>
+            <span class="metric-sub-text">전월 대비</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">DAU</div>
+          <div class="metric-value">3.42<span style="font-size:18px;font-weight:500;color:var(--text-secondary)">M</span></div>
+          <div class="metric-sub">
+            <span class="metric-badge up">↗ 3.1%</span>
+            <span class="metric-sub-text">전일 대비</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">신규 가입자수</div>
+          <div class="metric-value">4,218</div>
+          <div class="metric-sub">
+            <span class="metric-badge up">↗ 12.7%</span>
+            <span class="metric-sub-text">오늘 누적</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">이상거래 탐지</div>
+          <div class="metric-value" style="color:var(--red)">23</div>
+          <div class="metric-sub">
+            <span class="metric-badge down">↗ 4건</span>
+            <span class="metric-sub-text">전일 대비 증가</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 동시접속 + 고객 체류시간 -->
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">실시간 동시접속자</div>
+              <div class="card-subtitle">현재 앱 접속 중인 사용자</div>
+            </div>
+          </div>
+          <div class="concurrent-display">
+            <div class="concurrent-number" id="concurrent-count">142,847</div>
+            <div class="concurrent-label">현재 동시접속자</div>
+            <div class="concurrent-trend" id="concurrent-trend">
+              <!-- Generated by JS -->
+            </div>
+          </div>
+          <div style="margin-top:20px;">
+            <canvas id="concurrent-chart" height="120"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">고객 체류시간</div>
+          </div>
+          <div class="dwell-stats">
+            <div class="dwell-stat">
+              <div class="dwell-stat-value">4.8분</div>
+              <div class="dwell-stat-label">평균 체류</div>
+            </div>
+            <div class="dwell-stat">
+              <div class="dwell-stat-value">12.3분</div>
+              <div class="dwell-stat-label">자산관리 섹션</div>
+            </div>
+            <div class="dwell-stat">
+              <div class="dwell-stat-value">2.1분</div>
+              <div class="dwell-stat-label">간편 이체</div>
+            </div>
+          </div>
+          <div style="margin-top:20px;">
+            <canvas id="dwell-chart" height="140"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 앱 성능 + 인기 서비스 -->
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">앱 성능 Health Check</div>
+              <div class="card-subtitle">주요 서비스 응답시간 및 가용성</div>
+            </div>
+          </div>
+          <div class="health-grid">
+            <div class="health-item good">
+              <div class="health-name">API 응답</div>
+              <div class="health-value good">142ms</div>
+            </div>
+            <div class="health-item good">
+              <div class="health-name">앱 로딩</div>
+              <div class="health-value good">1.2s</div>
+            </div>
+            <div class="health-item warn">
+              <div class="health-name">결제 처리</div>
+              <div class="health-value warn">890ms</div>
+            </div>
+            <div class="health-item good">
+              <div class="health-name">가용성</div>
+              <div class="health-value good">99.97%</div>
+            </div>
+          </div>
+          <div style="margin-top:20px">
+            <div class="health-grid">
+              <div class="health-item good">
+                <div class="health-name">DB 응답</div>
+                <div class="health-value good">23ms</div>
+              </div>
+              <div class="health-item good">
+                <div class="health-name">캐시 적중률</div>
+                <div class="health-value good">94.2%</div>
+              </div>
+              <div class="health-item good">
+                <div class="health-name">에러율</div>
+                <div class="health-value good">0.03%</div>
+              </div>
+              <div class="health-item warn">
+                <div class="health-name">푸시 지연</div>
+                <div class="health-value warn">2.8s</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">인기 서비스 TOP 5</div>
+          </div>
+          <div class="service-list">
+            <div class="service-item">
+              <div class="service-rank r1">1</div>
+              <div class="service-info">
+                <div class="service-name">간편 이체</div>
+                <div class="service-desc">계좌이체 / 자동이체</div>
+              </div>
+              <div style="text-align:right">
+                <div class="service-users">842K</div>
+                <div class="service-bar-bg"><div class="service-bar-fill" style="width:100%"></div></div>
+              </div>
+            </div>
+            <div class="service-item">
+              <div class="service-rank r2">2</div>
+              <div class="service-info">
+                <div class="service-name">마이자산</div>
+                <div class="service-desc">자산 현황 조회</div>
+              </div>
+              <div style="text-align:right">
+                <div class="service-users">628K</div>
+                <div class="service-bar-bg"><div class="service-bar-fill" style="width:74%"></div></div>
+              </div>
+            </div>
+            <div class="service-item">
+              <div class="service-rank r3">3</div>
+              <div class="service-info">
+                <div class="service-name">SOL페이</div>
+                <div class="service-desc">QR / 바코드 결제</div>
+              </div>
+              <div style="text-align:right">
+                <div class="service-users">521K</div>
+                <div class="service-bar-bg"><div class="service-bar-fill" style="width:62%"></div></div>
+              </div>
+            </div>
+            <div class="service-item">
+              <div class="service-rank r4">4</div>
+              <div class="service-info">
+                <div class="service-name">적금/예금</div>
+                <div class="service-desc">상품 가입 및 관리</div>
+              </div>
+              <div style="text-align:right">
+                <div class="service-users">384K</div>
+                <div class="service-bar-bg"><div class="service-bar-fill" style="width:46%"></div></div>
+              </div>
+            </div>
+            <div class="service-item">
+              <div class="service-rank r5">5</div>
+              <div class="service-info">
+                <div class="service-name">대출 비교</div>
+                <div class="service-desc">금리 비교 / 한도 조회</div>
+              </div>
+              <div style="text-align:right">
+                <div class="service-users">276K</div>
+                <div class="service-bar-bg"><div class="service-bar-fill" style="width:33%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 이상거래 상세 -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <div>
+            <div class="card-title">이상거래 탐지 현황</div>
+            <div class="card-subtitle">FDS(이상거래탐지시스템) 실시간 알림</div>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns: 200px 1fr; gap:24px;">
+          <div class="anomaly-display">
+            <div class="anomaly-number">23</div>
+            <div class="anomaly-label">오늘 탐지 건수</div>
+            <div style="margin-top:12px; font-size:12px; color:var(--text-muted);">
+              <div>차단: <strong style="color:var(--red)">8건</strong></div>
+              <div>모니터링: <strong style="color:var(--orange)">15건</strong></div>
+            </div>
+          </div>
+          <div class="anomaly-list">
+            <div class="anomaly-item critical">
+              <svg class="anomaly-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              <span class="anomaly-text">비정상 대량이체 시도 (부산 권역) — 자동 차단 완료</span>
+              <span class="anomaly-time">14:32</span>
+            </div>
+            <div class="anomaly-item critical">
+              <svg class="anomaly-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              <span class="anomaly-text">해외 IP 다중 로그인 시도 — 계정 잠금 처리</span>
+              <span class="anomaly-time">13:58</span>
+            </div>
+            <div class="anomaly-item warning">
+              <svg class="anomaly-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+              <span class="anomaly-text">새벽 시간대 고액 거래 패턴 감지 — 모니터링 중</span>
+              <span class="anomaly-time">03:14</span>
+            </div>
+            <div class="anomaly-item warning">
+              <svg class="anomaly-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+              <span class="anomaly-text">동일 기기 다수 계좌 접속 탐지 — 모니터링 중</span>
+              <span class="anomaly-time">11:42</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script src="korea_map_data.js"></script>
+<script>
+  // Tab Switching
+  function switchTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.header-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+    // Update content
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.toggle('active', content.id === 'tab-' + tabName);
+    });
+  }
+
+  // Generate Branch Time Chart
+  function renderBranchTimeChart() {
+    const container = document.getElementById('branch-time-chart');
+    if (!container) return;
+    const hours = ['09', '10', '11', '12', '13', '14', '15', '16', '17'];
+    const values = [4200, 8900, 14200, 11800, 15600, 18200, 16400, 12800, 7200];
+    const max = Math.max(...values);
+    container.innerHTML = '';
+
+    hours.forEach((h, i) => {
+      const group = document.createElement('div');
+      group.className = 'time-bar-group';
+      group.style.position = 'relative';
+
+      const bar = document.createElement('div');
+      bar.className = 'time-bar' + (values[i] === max ? ' peak' : '');
+      bar.style.height = (values[i] / max * 100) + '%';
+      bar.title = h + ':00 — ' + values[i].toLocaleString() + '건';
+
+      const label = document.createElement('div');
+      label.className = 'time-label';
+      label.textContent = h + ':00';
+      label.style.position = 'relative';
+      label.style.bottom = 'auto';
+      label.style.marginTop = '6px';
+
+      group.appendChild(bar);
+      group.appendChild(label);
+      container.appendChild(group);
+    });
+  }
+
+  // Generate Concurrent Trend bars
+  function renderConcurrentTrend() {
+    const container = document.getElementById('concurrent-trend');
+    if (!container) return;
+    container.innerHTML = '';
+    const vals = [30,45,38,52,48,60,55,70,65,80,75,85,90,88,92,95,82,78,72,68];
+    vals.forEach(v => {
+      const bar = document.createElement('div');
+      bar.className = 'concurrent-bar';
+      bar.style.height = (v * 0.4) + 'px';
+      container.appendChild(bar);
+    });
+  }
+
+  // Simple canvas line chart for concurrent users
+  function renderConcurrentChart() {
+    const canvas = document.getElementById('concurrent-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width = canvas.parentElement.offsetWidth;
+    const h = canvas.height = 120;
+
+    const data = [82000,91000,105000,98000,112000,124000,138000,142847,135000,128000,118000,108000];
+    const labels = ['06','08','09','10','11','12','13','14','15','16','17','18'];
+    const max = Math.max(...data);
+    const min = Math.min(...data) * 0.9;
+    const padding = {l:40, r:20, t:10, b:24};
+    const chartW = w - padding.l - padding.r;
+    const chartH = h - padding.t - padding.b;
+
+    ctx.clearRect(0,0,w,h);
+
+    // Grid lines
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 0.5;
+    for (let i=0; i<4; i++) {
+      const y = padding.t + (chartH / 3) * i;
+      ctx.beginPath();
+      ctx.moveTo(padding.l, y);
+      ctx.lineTo(w - padding.r, y);
+      ctx.stroke();
+    }
+
+    // Line
+    ctx.beginPath();
+    ctx.strokeStyle = '#0046FF';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+
+    const points = data.map((v, i) => ({
+      x: padding.l + (chartW / (data.length - 1)) * i,
+      y: padding.t + chartH - ((v - min) / (max - min)) * chartH
+    }));
+
+    points.forEach((p, i) => {
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.stroke();
+
+    // Fill
+    ctx.lineTo(points[points.length-1].x, padding.t + chartH);
+    ctx.lineTo(points[0].x, padding.t + chartH);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, padding.t, 0, padding.t + chartH);
+    grad.addColorStop(0, 'rgba(0,70,255,0.15)');
+    grad.addColorStop(1, 'rgba(0,70,255,0.01)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Current dot
+    const last = points[7]; // 14:00 = current
+    ctx.beginPath();
+    ctx.arc(last.x, last.y, 4, 0, Math.PI*2);
+    ctx.fillStyle = '#0046FF';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(last.x, last.y, 7, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(0,70,255,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    labels.forEach((l, i) => {
+      const x = padding.l + (chartW / (labels.length - 1)) * i;
+      ctx.fillText(l + ':00', x, h - 4);
+    });
+  }
+
+  // Dwell time chart
+  function renderDwellChart() {
+    const canvas = document.getElementById('dwell-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width = canvas.parentElement.offsetWidth;
+    const h = canvas.height = 140;
+
+    const services = ['간편이체','마이자산','SOL페이','적금/예금','대출비교','카드관리','투자'];
+    const times = [2.1, 12.3, 3.4, 5.8, 8.2, 2.8, 6.5];
+    const max = Math.max(...times);
+    const padding = {l:70, r:20, t:10, b:10};
+    const barH = 14;
+    const gap = 6;
+    const chartW = w - padding.l - padding.r;
+
+    ctx.clearRect(0,0,w,h);
+
+    services.forEach((s, i) => {
+      const y = padding.t + i * (barH + gap);
+
+      // Label
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '11px Inter, Noto Sans KR, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(s, padding.l - 10, y + barH - 3);
+
+      // Bar bg
+      ctx.fillStyle = '#f3f4f6';
+      ctx.beginPath();
+      ctx.roundRect(padding.l, y, chartW, barH, 4);
+      ctx.fill();
+
+      // Bar
+      const bw = (times[i] / max) * chartW;
+      ctx.fillStyle = i === 1 ? '#0046FF' : 'rgba(0,70,255,0.5)';
+      ctx.beginPath();
+      ctx.roundRect(padding.l, y, bw, barH, 4);
+      ctx.fill();
+
+      // Value
+      ctx.fillStyle = '#1a1f36';
+      ctx.font = '10px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(times[i] + '분', padding.l + bw + 6, y + barH - 3);
+    });
+  }
+
+  // Animate concurrent number
+  function animateConcurrent() {
+    const el = document.getElementById('concurrent-count');
+    if (!el) return;
+    const base = 142847;
+    setInterval(() => {
+      const diff = Math.floor(Math.random() * 200) - 100;
+      const val = base + diff;
+      el.textContent = val.toLocaleString();
+    }, 3000);
+  }
+
+  // Korea Map rendering using real GeoJSON data
+  function renderKoreaMap() {
+    const canvas = document.getElementById('korea-map-canvas');
+    if (!canvas || typeof KOREA_MAP === 'undefined') return;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = rect.width;
+    const h = rect.height;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    // Background gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+    bgGrad.addColorStop(0, '#0b1929');
+    bgGrad.addColorStop(1, '#0d1f38');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // --- Projection: Mercator ---
+    // Bounding box of South Korea (approx)
+    const lonMin = 125.8, lonMax = 130.0, latMin = 33.0, latMax = 38.7;
+    const lonCenter = (lonMin + lonMax) / 2;
+    const latCenter = (latMin + latMax) / 2;
+
+    // Mercator helper
+    function toMerc(lat) { return Math.log(Math.tan(Math.PI/4 + (lat * Math.PI / 180) / 2)); }
+    const mercYMin = toMerc(latMin);
+    const mercYMax = toMerc(latMax);
+    const mercH = mercYMax - mercYMin;
+    const mercW = (lonMax - lonMin) * Math.PI / 180;
+    const aspect = mercW / mercH;
+
+    // Fit into canvas with padding
+    const pad = 30;
+    const availW = w - pad * 2;
+    const availH = h - pad * 2;
+    let scale, offsetX, offsetY;
+    if (availW / availH > aspect) {
+      scale = availH / mercH;
+      offsetX = pad + (availW - mercW * scale) / 2;
+      offsetY = pad;
+    } else {
+      scale = availW / mercW;
+      offsetX = pad;
+      offsetY = pad + (availH - mercH * scale) / 2;
+    }
+
+    function project(lon, lat) {
+      const x = offsetX + ((lon - lonMin) * Math.PI / 180) * scale;
+      const y = offsetY + (mercYMax - toMerc(lat)) * scale;
+      return [x, y];
+    }
+
+    // Province color map (varying shades of dark navy/blue)
+    const colorMap = {
+      'Seoul':              { fill: '#1c3d6e', stroke: '#2d5a9e' },
+      'Gyeonggi-do':        { fill: '#17325c', stroke: '#2a5090' },
+      'Incheon':            { fill: '#193660', stroke: '#2a5090' },
+      'Gangwon-do':         { fill: '#142c52', stroke: '#25478a' },
+      'Chungcheongbuk-do':  { fill: '#162f58', stroke: '#28498c' },
+      'Chungcheongnam-do':  { fill: '#183260', stroke: '#2a4e8e' },
+      'Daejeon':            { fill: '#1a3564', stroke: '#2d5294' },
+      'Jeollabuk-do':       { fill: '#152d55', stroke: '#264688' },
+      'Jeollanam-do':       { fill: '#142a50', stroke: '#24438a' },
+      'Gwangju':            { fill: '#193660', stroke: '#2d5294' },
+      'Gyeongsangbuk-do':   { fill: '#162f58', stroke: '#28498c' },
+      'Gyeongsangnam-do':   { fill: '#183260', stroke: '#2a4e8e' },
+      'Daegu':              { fill: '#1a3565', stroke: '#2d5294' },
+      'Busan':              { fill: '#1c3868', stroke: '#2d5294' },
+      'Ulsan':              { fill: '#17325c', stroke: '#28498c' },
+      'Jeju':               { fill: '#152d55', stroke: '#264688' },
+    };
+    const defaultColor = { fill: '#162f58', stroke: '#2a5090' };
+
+    // Draw each province
+    KOREA_MAP.forEach(prov => {
+      const colors = colorMap[prov.n] || defaultColor;
+      prov.p.forEach(polygon => {
+        polygon.forEach(ring => {
+          if (ring.length < 3) return;
+          ctx.beginPath();
+          const first = project(ring[0][0], ring[0][1]);
+          ctx.moveTo(first[0], first[1]);
+          for (let i = 1; i < ring.length; i++) {
+            const pt = project(ring[i][0], ring[i][1]);
+            ctx.lineTo(pt[0], pt[1]);
+          }
+          ctx.closePath();
+          ctx.fillStyle = colors.fill;
+          ctx.fill();
+          ctx.strokeStyle = colors.stroke;
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+        });
+      });
+    });
+
+    // --- City markers ---
+    const cities = [
+      { name: 'Seoul',    lon: 126.978, lat: 37.566, r: 6, color: '#5599dd', glow: 'rgba(85,153,221,0.35)', glowR: 18 },
+      { name: 'Gyeonggi', lon: 127.05,  lat: 37.28,  r: 4, color: '#5599dd', glow: 'rgba(85,153,221,0.2)',  glowR: 10 },
+      { name: 'Busan',    lon: 129.075, lat: 35.179, r: 6, color: '#ef4444', glow: 'rgba(239,68,68,0.4)',   glowR: 20 },
+      { name: 'Daejeon',  lon: 127.384, lat: 36.350, r: 3.5, color: '#5599dd', glow: 'rgba(85,153,221,0.15)', glowR: 8 },
+      { name: 'Daegu',    lon: 128.601, lat: 35.871, r: 3.5, color: '#5599dd', glow: 'rgba(85,153,221,0.15)', glowR: 8 },
+      { name: 'Gwangju',  lon: 126.851, lat: 35.159, r: 3.5, color: '#5599dd', glow: 'rgba(85,153,221,0.15)', glowR: 8 },
+    ];
+
+    cities.forEach(c => {
+      const [cx, cy] = project(c.lon, c.lat);
+      // Glow
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, c.glowR);
+      g.addColorStop(0, c.glow);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.beginPath();
+      ctx.arc(cx, cy, c.glowR, 0, Math.PI * 2);
+      ctx.fillStyle = g;
+      ctx.fill();
+      // Dot
+      ctx.beginPath();
+      ctx.arc(cx, cy, c.r, 0, Math.PI * 2);
+      ctx.fillStyle = c.color;
+      ctx.fill();
+      // Inner highlight
+      ctx.beginPath();
+      ctx.arc(cx - c.r * 0.25, cy - c.r * 0.25, c.r * 0.35, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.fill();
+    });
+
+    // Seoul area subtle glow overlay
+    const [sx, sy] = project(126.978, 37.566);
+    const seoulGlow = ctx.createRadialGradient(sx, sy, 0, sx, sy, 40);
+    seoulGlow.addColorStop(0, 'rgba(85,153,221,0.12)');
+    seoulGlow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath();
+    ctx.arc(sx, sy, 40, 0, Math.PI * 2);
+    ctx.fillStyle = seoulGlow;
+    ctx.fill();
+
+    // Busan pulsing ring animation
+    let phase = 0;
+    const [bx, by] = project(129.075, 35.179);
+    function pulseBusan() {
+      phase += 0.04;
+      const r = 10 + Math.sin(phase) * 6;
+      const alpha = 0.2 + Math.sin(phase) * 0.12;
+      // We need to redraw, so just overlay
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+      // Clear pulse area
+      ctx.beginPath();
+      ctx.arc(bx, by, 22, 0, Math.PI*2);
+      ctx.fillStyle = bgGrad;
+      // Don't clear—just draw ring on top
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(bx, by, r, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(239,68,68,' + alpha + ')';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
+
+  // Donut Chart rendering (no round caps, with small gaps between segments)
+  function renderDonutChart() {
+    const canvas = document.getElementById('donut-canvas');
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 200 * dpr;
+    canvas.height = 200 * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const cx = 100, cy = 100, r = 70, lineW = 28;
+    const gap = 0.03; // small gap in radians between segments
+    const segments = [
+      { pct: 0.64, color: '#1a1f36' },  // Digital App
+      { pct: 0.22, color: '#6b8df7' },  // Physical Branch
+      { pct: 0.14, color: '#d1d5db' },  // Automated ATM
+    ];
+
+    // Start from top (-90deg = -PI/2)
+    let startAngle = -Math.PI / 2;
+
+    segments.forEach((seg, i) => {
+      const sweepAngle = seg.pct * Math.PI * 2;
+      const segStart = startAngle + gap / 2;
+      const segEnd = startAngle + sweepAngle - gap / 2;
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, segStart, segEnd);
+      ctx.strokeStyle = seg.color;
+      ctx.lineWidth = lineW;
+      ctx.lineCap = 'butt'; // NO round caps
+      ctx.stroke();
+
+      startAngle += sweepAngle;
+    });
+  }
+
+  // Init
+  document.addEventListener('DOMContentLoaded', () => {
+    renderDonutChart();
+    renderKoreaMap();
+    renderBranchTimeChart();
+    renderConcurrentTrend();
+    renderConcurrentChart();
+    renderDwellChart();
+    animateConcurrent();
+
+    // Re-render charts on tab switch (for correct canvas sizing)
+    document.querySelectorAll('.header-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setTimeout(() => {
+          renderKoreaMap();
+          renderConcurrentChart();
+          renderDwellChart();
+          renderBranchTimeChart();
+        }, 50);
+      });
+    });
+
+    // Resize handler
+    window.addEventListener('resize', () => {
+      renderKoreaMap();
+    });
+  });
+</script>
+
+</body>
+</html>
